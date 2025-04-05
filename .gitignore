@@ -1,0 +1,7 @@
+.qodo
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env
+*.db
