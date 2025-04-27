@@ -89,9 +89,106 @@ def update_investment_profile(thread: MessageHistory, response: str) -> None:
             profile["immediate_investment"] = response
         elif "allocate monthly" in question.lower():
             profile["monthly_investment"] = response
-    
-    # Add similar mappings for other categories
-    # The pattern continues for each category in the investment profile
+            
+    elif category == "financial_security":
+        if "emergency fund" in question.lower():
+            profile["emergency_fund"] = response
+        elif "living expenses" in question.lower():
+            profile["months_coverage"] = response
+            
+    elif category == "current_investments":
+        if "where" in question.lower():
+            profile["existing_investments"] = response
+        elif "percentage" in question.lower():
+            profile["invested_percentage"] = response
+            
+    elif category == "short_term_goals":
+        if "achieve within" in question.lower():
+            profile["goals"] = response
+        elif "amount needed" in question.lower():
+            profile["amounts_needed"] = response
+        elif "flexible" in question.lower():
+            profile["timeline_flexibility"] = response
+            
+    elif category == "mid_term_goals":
+        if "plan to achieve" in question.lower():
+            profile["goals"] = response
+        elif "amount needed" in question.lower():
+            profile["amounts_needed"] = response
+        elif "timing" in question.lower():
+            profile["timing_importance"] = response
+            
+    elif category == "long_term_goals":
+        if "financial goals" in question.lower():
+            profile["goals"] = response
+        elif "retirement" in question.lower():
+            profile["retirement_amount"] = response
+        elif "age" in question.lower():
+            profile["target_age"] = response
+            
+    elif category == "goal_prioritization":
+        if "main financial goals" in question.lower():
+            profile["main_goals"] = response
+        elif "rank" in question.lower():
+            profile["priority_ranking"] = response
+        elif "mandatory" in question.lower():
+            profile["mandatory_goals"] = response
+            
+    elif category == "risk_profile":
+        if "maximizing profit" in question.lower():
+            profile["profit_vs_preservation"] = response
+        elif "risk tolerance" in question.lower():
+            profile["risk_tolerance"] = response
+        elif "react to temporary" in question.lower():
+            profile["decline_reaction"] = response
+        elif "acceptable" in question.lower():
+            profile["acceptable_loss"] = response
+        elif "20% drop" in question.lower():
+            profile["market_drop_reaction"] = response
+            
+    elif category == "investment_preferences":
+        if "how long" in question.lower():
+            profile["investment_duration"] = response
+        elif "major expenses" in question.lower():
+            profile["future_expenses"] = response
+        elif "quickly access" in question.lower():
+            profile["liquidity_importance"] = response
+        elif "less liquid" in question.lower():
+            profile["illiquid_assets"] = response
+            
+    elif category == "restrictions":
+        if "ethical reasons" in question.lower():
+            profile["ethical_restrictions"] = response
+        elif "interest or disinterest" in question.lower():
+            profile["preferred_industries"] = response
+        elif "legal or tax restrictions" in question.lower():
+            profile["legal_restrictions"] = response
+        elif "personal preferences" in question.lower():
+            profile["personal_preferences"] = response
+            
+    elif category == "investment_instruments":
+        if "international capital markets" in question.lower():
+            profile["international_access"] = response
+        elif "instruments are available" in question.lower():
+            profile["available_instruments"] = response
+        elif "particular industries" in question.lower():
+            profile["preferred_industries"] = response
+        elif "geographic regions" in question.lower():
+            profile["geographic_focus"] = response
+        elif "tax-efficient" in question.lower():
+            profile["tax_efficiency"] = response
+            
+    elif category == "success_metrics":
+        if "define the success" in question.lower():
+            profile["success_definition"] = response
+        elif "return metrics" in question.lower():
+            profile["return_expectations"] = response
+        elif "review and adjust" in question.lower():
+            profile["review_frequency"] = response
+        elif "life events" in question.lower():
+            profile["life_events"] = response
+        elif "actively" in question.lower():
+            profile["management_style"] = response
     
     thread.investment_profile[category] = profile
 
