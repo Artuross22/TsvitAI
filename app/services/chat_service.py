@@ -5,7 +5,8 @@ from langchain.chains import LLMChain
 from app.models import ChatMessage, MessageHistory
 from app.config import openai_api_key, active_threads, INVESTMENT_QUESTIONS
 from app.services.strategy_service import generate_investment_strategy
-from typing import Optional
+from app.services.validation_service import validate_response, validate_response_coherence
+from typing import Optional, Dict, Any
 
 def get_next_question(thread: MessageHistory) -> tuple[Optional[str], Optional[str]]:
     """Get the next question and category to ask."""
@@ -42,13 +43,34 @@ def get_next_question(thread: MessageHistory) -> tuple[Optional[str], Optional[s
         # Question not found in current category
         return None, None
 
-def update_investment_profile(thread: MessageHistory, response: str) -> None:
-    """Update the investment profile based on the current question and response."""
+def update_investment_profile(thread: MessageHistory, response: str) -> tuple[bool, Optional[str]]:
+    """
+    Update the investment profile based on the current question and response.
+    Returns (success, error_message).
+    """
     if not thread.current_category or not thread.current_question:
-        return
+        return False, "No current question to answer."
     
     category = thread.current_category
     question = thread.current_question
+    
+    # Validate the response format
+    is_valid, error_message = validate_response(category, question, response)
+    if not is_valid:
+        return False, error_message
+    
+    # Get previous responses for coherence validation
+    previous_responses = {}
+    for cat, profile in thread.investment_profile.items():
+        for field, value in profile.items():
+            if value is not None:
+                previous_responses[field] = value
+    
+    # Validate response coherence with previous answers
+    is_coherent, coherence_error = validate_response_coherence(category, question, response, previous_responses)
+    if not is_coherent:
+        return False, coherence_error
+    
     profile = thread.investment_profile[category]
     
     # Map questions to profile fields based on category
@@ -191,8 +213,9 @@ def update_investment_profile(thread: MessageHistory, response: str) -> None:
             profile["management_style"] = response
     
     thread.investment_profile[category] = profile
+    return True, None
 
-def process_chat(chat_message: ChatMessage):
+def process_chat(chat_message: ChatMessage) -> Dict[str, Any]:
     # Create or get thread
     if not chat_message.thread_id or chat_message.thread_id not in active_threads:
         thread_id = str(uuid.uuid4())
@@ -210,13 +233,22 @@ def process_chat(chat_message: ChatMessage):
             "current_question": next_question,
             "profile_complete": False
         }
-    else:
-        thread_id = chat_message.thread_id
-
+    
+    thread_id = chat_message.thread_id
     thread = active_threads[thread_id]
     
     # Update investment profile with user's response
-    update_investment_profile(thread, chat_message.message)
+    success, error_message = update_investment_profile(thread, chat_message.message)
+    
+    if not success:
+        # If validation failed, return error message and keep the same question
+        return {
+            "response": f"I apologize, but I couldn't process your response: {error_message} Please try again.",
+            "thread_id": thread_id,
+            "current_category": thread.current_category,
+            "current_question": thread.current_question,
+            "profile_complete": False
+        }
     
     # Get next question
     next_category, next_question = get_next_question(thread)
@@ -238,9 +270,9 @@ User's investment profile so far:
 Previous conversation:
 {history}
 
-If the user has answered the current question, analyze their response and provide appropriate feedback.
-If the user hasn't answered the current question yet, guide them to answer it.
-If all questions are answered, provide a detailed investment strategy recommendation based on their profile.
+Analyze the user's response and provide appropriate feedback.
+If the response seems unclear or potentially problematic, ask for clarification.
+Keep your response focused on the current question and its context.
 
 User: {message}
 Assistant:"""
@@ -274,7 +306,7 @@ Assistant:"""
         investment_profile=profile_str
     )
     
-    # Store the conversation
+    # Store the conversation only if validation passed
     thread.messages.append({
         "user": chat_message.message,
         "assistant": response
@@ -299,7 +331,8 @@ Assistant:"""
     
     # If there's a next question, append it to the response
     if next_question:
-        response = f"{response}\n\n{next_question}"
+        response = f"{response}" 
+        # \n\n{next_question}
     
     return {
         "response": response,
