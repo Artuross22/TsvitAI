@@ -5,7 +5,6 @@ from langchain.chains import LLMChain
 from app.models import ChatMessage, MessageHistory
 from app.config import openai_api_key, active_threads, INVESTMENT_QUESTIONS
 from app.services.strategy_service import generate_investment_strategy
-from app.services.validation_service import validate_response, validate_response_coherence
 from typing import Optional, Dict, Any
 
 def get_next_question(thread: MessageHistory) -> tuple[Optional[str], Optional[str]]:
@@ -54,23 +53,6 @@ def update_investment_profile(thread: MessageHistory, response: str) -> tuple[bo
     category = thread.current_category
     question = thread.current_question
     
-    # Validate the response format
-    is_valid, error_message = validate_response(category, question, response)
-    if not is_valid:
-        return False, error_message
-    
-    # Get previous responses for coherence validation
-    previous_responses = {}
-    for cat, profile in thread.investment_profile.items():
-        for field, value in profile.items():
-            if value is not None:
-                previous_responses[field] = value
-    
-    # Validate response coherence with previous answers
-    is_coherent, coherence_error = validate_response_coherence(category, question, response, previous_responses)
-    if not is_coherent:
-        return False, coherence_error
-    
     profile = thread.investment_profile[category]
     
     # Map questions to profile fields based on category
@@ -89,8 +71,6 @@ def update_investment_profile(thread: MessageHistory, response: str) -> tuple[bo
     elif category == "investment_experience":
         if "experience" in question.lower():
             profile["experience"] = response
-        elif "stock market" in question.lower():
-            profile["stock_market_knowledge"] = response
         elif "real estate" in question.lower():
             profile["alternative_investments"] = response
     
@@ -101,10 +81,6 @@ def update_investment_profile(thread: MessageHistory, response: str) -> tuple[bo
             profile["monthly_expenses"] = response
         elif "save each month" in question.lower():
             profile["monthly_savings"] = response
-        elif "total amount" in question.lower():
-            profile["total_savings"] = response
-        elif "distribution" in question.lower():
-            profile["savings_distribution"] = response
         elif "liabilities" in question.lower():
             profile["financial_liabilities"] = response
         elif "invest immediately" in question.lower():
@@ -139,14 +115,6 @@ def update_investment_profile(thread: MessageHistory, response: str) -> tuple[bo
             profile["amounts_needed"] = response
         elif "timing" in question.lower():
             profile["timing_importance"] = response
-            
-    elif category == "long_term_goals":
-        if "financial goals" in question.lower():
-            profile["goals"] = response
-        elif "retirement" in question.lower():
-            profile["retirement_amount"] = response
-        elif "age" in question.lower():
-            profile["target_age"] = response
             
     elif category == "goal_prioritization":
         if "main financial goals" in question.lower():
@@ -241,7 +209,6 @@ def process_chat(chat_message: ChatMessage) -> Dict[str, Any]:
     success, error_message = update_investment_profile(thread, chat_message.message)
     
     if not success:
-        # If validation failed, return error message and keep the same question
         return {
             "response": f"I apologize, but I couldn't process your response: {error_message} Please try again.",
             "thread_id": thread_id,
@@ -306,7 +273,7 @@ Assistant:"""
         investment_profile=profile_str
     )
     
-    # Store the conversation only if validation passed
+    # Store the conversation
     thread.messages.append({
         "user": chat_message.message,
         "assistant": response
@@ -331,8 +298,7 @@ Assistant:"""
     
     # If there's a next question, append it to the response
     if next_question:
-        response = f"{response}" 
-        # \n\n{next_question}
+        response = f"{response}\n\n{next_question}"
     
     return {
         "response": response,

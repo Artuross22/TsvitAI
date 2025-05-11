@@ -22,7 +22,6 @@ INVESTMENT_QUESTIONS: Dict[str, List[str]] = {
     
     "investment_experience": [
         "Do you have investment experience? If so, in which instruments?",
-        "Are you familiar with the basic principles of how the stock market works?",
         "Have you previously invested in real estate or other alternative assets?"
     ],
     
@@ -30,8 +29,6 @@ INVESTMENT_QUESTIONS: Dict[str, List[str]] = {
         "What is your current monthly income?",
         "What are your monthly expenses?",
         "How much do you currently save each month?",
-        "What is the total amount of your existing savings?",
-        "What is the distribution of your existing savings (cash, deposits, investments)?",
         "Do you have financial liabilities (loans, mortgage, other debts)?",
         "How much are you willing to invest immediately?",
         "How much can you allocate monthly for investment?"
@@ -57,12 +54,6 @@ INVESTMENT_QUESTIONS: Dict[str, List[str]] = {
         "What financial goals do you plan to achieve within 3 to 10 years?",
         "What is the approximate amount needed for each of these goals?",
         "How important is the precise timing of these goals to you?"
-    ],
-    
-    "long_term_goals": [
-        "What are your long-term financial goals (retirement, major purchase, financial independence)?",
-        "What amount do you need for a comfortable retirement/financial independence?",
-        "At what age do you plan to achieve these goals?"
     ],
     
     "goal_prioritization": [
